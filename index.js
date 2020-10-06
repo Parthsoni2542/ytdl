@@ -1,3 +1,4 @@
+
 const Koa = require('koa')
 const koaBody = require('koa-body')
 const mount = require('koa-mount')
@@ -6,32 +7,21 @@ const { RateLimiterMemory } = require('rate-limiter-flexible')
 const app = new Koa()
 const getVideo = require('./getvid')
 const gql = require('./gql')
+const path = require('path')
+const https = require('https')
+const fs = require('fs')
+const http = require('http');
+
+const forceHTTPS = require('koa-force-https');
+// app.use(forceHTTPS());
+// app.use(forceHTTPS(undefined, 'localhost', 307));
+
 
 app.proxy = true
 app.use(koaBody())
+app.use(forceHTTPS());
 
-// Ratelimit, prevent someone from abusing the demo site
-// const limiter = new RateLimiterMemory({
-// 	points: 10,
-// 	duration: 3600
-// })
-// app.use(async (ctx, next) => {
-// 	let allowed = true
-// 	try {
-// 		await limiter.consume(ctx.ip)
-// 		await next()
-// 	} catch (e) {
-// 		ctx.status = 429
-// 		ctx.body = 'Too Many Requests'
-// 		allowed = false
-// 	}
-// 	console.log(
-// 		'Request IP: %s, Allowed: %s, Url: %s',
-// 		ctx.ip,
-// 		allowed,
-// 		ctx.url
-// 	)
-// })
+
 
 // cors
 app.use(async (ctx, next) => {
@@ -84,5 +74,40 @@ app.use(async ctx => {
 	}
 })
 
-const PORT = process.env.PORT || 3000
-app.listen(PORT, () => console.log(`listen on: http://localhost:${PORT}`))
+
+
+var https_options = {
+	key: fs.readFileSync(path.join(__dirname, 'cert', 'key.pem')),
+    cert: fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem')),
+
+};
+
+app.use(forceHTTPS());
+
+
+
+
+
+// const appCallback = app.callback();
+
+
+// http.createServer(app.callback())).listen(3000)
+//  function (req, res) {a
+// res.writeHead(200);
+// res.end("Welcome to Node.js HTTPS Servern");
+// app.get('/api').
+// }
+
+http.createServer(app.callback()).listen(80);
+https.createServer(https_options, app.callback()).listen(443);
+// http.createServer(.listen(80);
+// https.createServer(https_options,appCallback).listen(3000)
+// http.createServer(https_options,appCallback).listen(3001)
+
+// const PORT = process.env.PORT || 3000
+
+// if (https.createServer(https_options,appCallback).listen(3000)) {
+
+// }
+// // sslServer.listen(PORT, () => console.log(`listen on: http://localhost:${PORT}`))
+// app.listen(PORT, () => console.log(`listen on: http://localhost:${PORT}`))
