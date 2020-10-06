@@ -11,8 +11,15 @@ const path = require('path')
 const https = require('https')
 const fs = require('fs')
 const http = require('http');
+
+// const forceHTTPS = require('koa-force-https');
+// app.use(forceHTTPS());
+// app.use(forceHTTPS(undefined, 'localhost', 307));
+
+
 app.proxy = true
 app.use(koaBody())
+// app.use(forceHTTPS());
 
 
 
@@ -69,11 +76,16 @@ app.use(async ctx => {
 
 
 
-// var https_options = {
-// 	key: fs.readFileSync(path.join(__dirname, 'cert', 'key.pem')),
-//     cert: fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem')),
+var https_options = {
+	key: fs.readFileSync(path.join(__dirname, 'cert', 'key.pem')),
+    cert: fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem')),
 
-// };
+};
+
+https.createServer(https_options, function (req, res) {
+  res.writeHead(200);
+  res.end("hello world\n");
+}).listen(8000);
 
 // app.use(forceHTTPS());
 
@@ -84,7 +96,24 @@ app.use(async ctx => {
 // const appCallback = app.callback();
 
 
+// http.createServer(app.callback())).listen(3000)
+//  function (req, res) {a
+// res.writeHead(200);
+// res.end("Welcome to Node.js HTTPS Servern");
+// app.get('/api').
+// }
+
+// http.createServer(app.callback()).listen(80);
+// https.createServer(https_options, app.callback()).listen(443);
+// http.createServer(.listen(80);
+// const PORT = process.env.PORT || 3000
+// https.createServer(https_options,appCallback).listen(PORT, () => console.log(`listen on: http://localhost:${PORT}`))
+// http.createServer(https_options,appCallback).listen(3001)
 
 
-const PORT = process.env.PORT || 3000
-app.listen(PORT, () => console.log(`listen on: http://localhost:${PORT}`))
+
+// if (https.createServer(https_options,appCallback).listen(3000)) {
+
+// }
+// // sslServer.listen(PORT, () => console.log(`listen on: http://localhost:${PORT}`))
+// app.listen(PORT, () => console.log(`listen on: http://localhost:${PORT}`))
