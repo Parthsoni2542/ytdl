@@ -1,4 +1,3 @@
-
 const Koa = require('koa')
 const koaBody = require('koa-body')
 const mount = require('koa-mount')
@@ -7,14 +6,32 @@ const { RateLimiterMemory } = require('rate-limiter-flexible')
 const app = new Koa()
 const getVideo = require('./getvid')
 const gql = require('./gql')
-const path = require('path')
-const https = require('https')
-const fs = require('fs')
-const http = require('http');
+
 app.proxy = true
 app.use(koaBody())
 
-
+// Ratelimit, prevent someone from abusing the demo site
+const limiter = new RateLimiterMemory({
+	points: 2000,
+	duration: 10
+})
+app.use(async (ctx, next) => {
+	let allowed = true
+	try {
+		await limiter.consume(ctx.ip)
+		await next()
+	} catch (e) {
+		ctx.status = 429
+		ctx.body = 'Too Many Requests'
+		allowed = false
+	}
+	console.log(
+		'Request IP: %s, Allowed: %s, Url: %s',
+		ctx.ip,
+		allowed,
+		ctx.url
+	)
+})
 
 // cors
 app.use(async (ctx, next) => {
@@ -66,25 +83,6 @@ app.use(async ctx => {
 		}
 	}
 })
-
-
-
-// var https_options = {
-// 	key: fs.readFileSync(path.join(__dirname, 'cert', 'key.pem')),
-//     cert: fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem')),
-
-// };
-
-// app.use(forceHTTPS());
-
-
-
-
-
-// const appCallback = app.callback();
-
-
-
 
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => console.log(`listen on: http://localhost:${PORT}`))
